@@ -4,4 +4,7 @@
     <string name="feedTitle">Feed Title: </string>
     <string name="feedDescription">Feed Description: </string>
     <string name="feedLink">Feed Link: </string>
+    <string name="deleteAllOption">Delete all</string>
+    <string name="dumpLog">Dump log</string>
+    <string name="sortByTitle">Sort by Title</string>
 </resources>

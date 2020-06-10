@@ -24,8 +24,8 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
     private Context mContext;
 
     public FeedAdapter(Context context, List<FeedEntity> items){
-        this.items    = items;
         this.mContext = context;
+        this.items    = items;
     }
 
     public static class FeedViewHolder extends RecyclerView.ViewHolder{
@@ -61,9 +61,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
         mLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String link = mLink.getText().toString();
-                Uri uri = Uri.parse(link);
-                Intent webView = new Intent(Intent.ACTION_VIEW,uri);
+                Intent webView = new Intent(Intent.ACTION_VIEW,Uri.parse(mLink.getText().toString()));
                 try{
                     if(webView.resolveActivity(mContext.getPackageManager()) != null){
                         webView.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

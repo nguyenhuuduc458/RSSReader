@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/deleteAllItem" android:title="@string/deleteAllOption" />
+    <item android:id="@+id/dumpLog" android:title="@string/dumpLog" />
+    <item android:id="@+id/sortItem" android:title="@string/sortByTitle"/>
+</menu>

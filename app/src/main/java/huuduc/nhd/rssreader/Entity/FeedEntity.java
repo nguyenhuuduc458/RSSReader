@@ -1,13 +1,16 @@
 package huuduc.nhd.rssreader.Entity;
 
-public class FeedEntity {
+import java.util.Collections;
+import java.util.Enumeration;
+
+public class FeedEntity implements Comparable<FeedEntity> {
     private String title;
     private String description;
     private String link;
 
-    public void FeedEntity() { }
+    public FeedEntity() { }
 
-    public void FeedEntity(String title, String link, String description){
+    public FeedEntity(String title, String link, String description){
         this.description = description;
         this.title       = title;
         this.link        = link;
@@ -44,5 +47,10 @@ public class FeedEntity {
                 ", description='" + description + '\'' +
                 ", link='" + link + '\'' +
                 '}';
+    }
+
+    @Override
+    public int compareTo(FeedEntity o) {
+        return this.title.compareTo(o.getTitle());
     }
 }
