@@ -34,7 +34,7 @@ public class XMLPullParserHandler {
     public List<FeedEntity> parseFeed(InputStream inputStream) {
         try {
            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-           factory.setNamespaceAware(true); // avoid conflict of tagName in xml
+           factory.setNamespaceAware(false); // avoid conflict of tagName in xml
 
            XmlPullParser parser = factory.newPullParser();
            parser.setInput(inputStream,null);
@@ -66,9 +66,9 @@ public class XMLPullParserHandler {
                        if(!title.equals("") && !link.equals("") && !description.equals("")){
                            if(isItem){
                                items.add(new FeedEntity(title,link,description));
-                           }else{
-                               MainActivity.mFeedTitle       = title;
+                           }else {
                                MainActivity.mFeedDescription = description;
+                               MainActivity.mFeedTitle       = title;
                                MainActivity.mFeedLink        = link;
                                Log.i("nguyenhuuduc",MainActivity.mFeedTitle + " " + MainActivity.mFeedDescription + " " + MainActivity.mFeedLink);
                            }
@@ -91,6 +91,5 @@ public class XMLPullParserHandler {
         }finally {
             return items;
         }
-
     }
 }

@@ -18,7 +18,7 @@ import java.util.List;
 import huuduc.nhd.rssreader.Entity.FeedEntity;
 import huuduc.nhd.rssreader.R;
 
-public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder> {
+public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.ViewHolder> {
 
     private List<FeedEntity> items;
     private Context mContext;
@@ -28,34 +28,34 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
         this.items    = items;
     }
 
-    public static class FeedViewHolder extends RecyclerView.ViewHolder{
+    public static class ViewHolder extends RecyclerView.ViewHolder{
         private View rssFeedView;
-        public FeedViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
             rssFeedView = itemView;
         }
     }
 
     @Override
-    public FeedViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View row = LayoutInflater.from(parent.getContext()).inflate(R.layout.rss_item_layout,parent, false);
-        FeedViewHolder holder = new FeedViewHolder(row);
+        ViewHolder holder = new ViewHolder(row);
         return holder;
     }
 
     @Override
-    public void onBindViewHolder(FeedViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, int position) {
         final FeedEntity item = items.get(position);
         final TextView mTitle, mDescription, mLink;
 
         // maping component
-        mTitle       = holder.rssFeedView.findViewById(R.id.titleText);
         mDescription = holder.rssFeedView.findViewById(R.id.descriptionText);
+        mTitle       = holder.rssFeedView.findViewById(R.id.titleText);
         mLink        = holder.rssFeedView.findViewById(R.id.linkText);
 
         // set values for component
-        mTitle.setText(item.getTitle());
         mDescription.setText(item.getDescription());
+        mTitle.setText(item.getTitle());
         mLink.setText(item.getLink());
 
         mLink.setOnClickListener(new View.OnClickListener() {
@@ -76,7 +76,18 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
     @Override
     public int getItemCount() {
-        return items.size();
+        try{
+            return items.size();
+        }catch (NullPointerException e){
+            return -1;
+        }
+    }
+
+    public void saveChanges(){ notifyDataSetChanged();}
+
+    public void deleteAll(){
+        items.clear();
+        saveChanges();
     }
 
 }

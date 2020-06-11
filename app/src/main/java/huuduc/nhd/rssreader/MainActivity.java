@@ -1,6 +1,8 @@
 package huuduc.nhd.rssreader;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -11,6 +13,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,6 +24,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -33,6 +37,7 @@ import huuduc.nhd.rssreader.Process.XMLPullParserHandler;
 public class MainActivity extends AppCompatActivity {
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private FeedAdapter        mAdapter;
     private RecyclerView       mRecyclerView;
     private TextView           mTitleTextView, mLinkTextView, mDescriptionTextView;
     private Button             mFetchButton;
@@ -40,45 +45,46 @@ public class MainActivity extends AppCompatActivity {
 
     private List<FeedEntity> mlistItems;
     public static String mFeedDescription ="";
-    public static String mFeedTitle ="";
-    public static String mFeedLink  = "";
+    public static String mFeedTitle       ="";
+    public static String mFeedLink        = "";
+
+    public static final String KEY_DESCRIPTION_SAVE = "Description";
+    public static final String KEY_TITLE_SAVE       = "Title";
+    public static final String KEY_LINK_SAVE        = "Link";
+    public static final String KEY_LIST_SAVE        = "listItem";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // maping component
+        //Maping component
         maping();
 
-        //set default value
+        //Set default value for component
         setDefaultValue();
 
-        // action
-        mFetchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new FetchFeedData().execute();
-            }
-        });
+        //Set action event and swipe down
+        setActionForButton();
 
-        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                new FetchFeedData().execute();
-            }
-        });
+        // Set Animation
+        //mRecyclerView.setAnimation(new DefaultItemAnimator());
 
+        // reserve state when rotate
+        if(savedInstanceState != null){
+            onRestoreInstanceState(savedInstanceState);
+            Log.i("nguyenhuuduc","coqua");
+        }
     }
 
     protected void maping(){
-        mDescriptionTextView    = findViewById(R.id.textViewFeedDescription);
-        mSwipeRefreshLayout     = findViewById(R.id.swipeRefreshLayout);
-        mTitleTextView          = findViewById(R.id.textViewFeedTitle);
-        mLinkTextView           = findViewById(R.id.textViewFeedLink);
-        mRecyclerView           = findViewById(R.id.recyclerView);
-        mFetchButton            = findViewById(R.id.buttonFetchData);
-        mLinkInput              = findViewById(R.id.editTextInputLink);
+        mDescriptionTextView  = findViewById(R.id.textViewFeedDescription);
+        mSwipeRefreshLayout   = findViewById(R.id.swipeRefreshLayout);
+        mTitleTextView        = findViewById(R.id.textViewFeedTitle);
+        mLinkTextView         = findViewById(R.id.textViewFeedLink);
+        mRecyclerView         = findViewById(R.id.recyclerView);
+        mFetchButton          = findViewById(R.id.buttonFetchData);
+        mLinkInput            = findViewById(R.id.editTextInputLink);
     }
 
     protected void setDefaultValue(){
@@ -115,7 +121,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void deleteAll() {
-
+        mAdapter.deleteAll();
+        mDescriptionTextView.setText("Feed Description: ");
+        mTitleTextView.setText("Feed Title: ");
+        mLinkTextView.setText("Feed Link: ");
+        mLinkInput.setText("");
     }
 
     private void sortItem() {
@@ -126,14 +136,42 @@ public class MainActivity extends AppCompatActivity {
         
     }
 
+    private void setActionForButton(){
+        mFetchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new FetchFeedData().execute();
+            }
+        });
+
+        mLinkInput.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View view, int KeyCode, KeyEvent keyEvent) {
+                if(KeyCode == KeyEvent.KEYCODE_ENTER){
+                    new FetchFeedData().execute();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                new FetchFeedData().execute();
+            }
+        });
+
+    }
+
     private class FetchFeedData extends AsyncTask<Void, Void, Boolean>{
         private String urlLink;
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
             mSwipeRefreshLayout.setRefreshing(true);
-            urlLink = mLinkInput.getText().toString();
+            urlLink = mLinkInput.getText().toString().trim();
+            super.onPreExecute();
         }
 
         @Override
@@ -142,11 +180,10 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             try {
                 if(!urlLink.startsWith("http") && !urlLink.startsWith("https"))
-                    urlLink = "http://" + urlLink;
+                    urlLink = "https://" + urlLink;
 
                 InputStream inputStream = new URL(urlLink).openConnection().getInputStream();
                 mlistItems              = new XMLPullParserHandler().parseFeed(inputStream);
-                Log.i("nguyenhuuduc",String.valueOf(mlistItems.size()));
                 return true;
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -157,25 +194,46 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onProgressUpdate(Void... values) {
-              super.onProgressUpdate(values);
-              mRecyclerView.setAdapter(new FeedAdapter(getApplicationContext(),mlistItems));
-        }
-
-        @Override
         protected void onPostExecute(Boolean success) {
             mSwipeRefreshLayout.setRefreshing(false);
             if(success){
                 mDescriptionTextView.setText("Feed Description: " + MainActivity.mFeedDescription);
                 mTitleTextView.setText("Feed Title: " + MainActivity.mFeedTitle);
                 mLinkTextView.setText("Feed Link: " + MainActivity.mFeedLink);
-                mRecyclerView.setAdapter(new FeedAdapter(getApplicationContext(),mlistItems));
-                Log.i("nguyenhuuduc", String.valueOf(mlistItems.get(1).toString()));
+                mAdapter = new FeedAdapter(getApplicationContext(),mlistItems);
+                mRecyclerView.setAdapter(mAdapter);
+                Log.i("nguyenhuuduc", String.valueOf(mAdapter.getItemCount()));
             }else{
                 Toast.makeText(MainActivity.this,"Enter a valid Rss feed url",Toast.LENGTH_LONG).show();
+                mLinkInput.setText("");
                 mLinkInput.requestFocus();
             }
             super.onPostExecute(success);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(MainActivity.KEY_LIST_SAVE,(Serializable) mlistItems);
+        outState.putString(MainActivity.KEY_DESCRIPTION_SAVE,MainActivity.mFeedDescription);
+        outState.putString(MainActivity.KEY_TITLE_SAVE,MainActivity.mFeedTitle);
+        outState.putString(MainActivity.KEY_LINK_SAVE,MainActivity.mFeedLink);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        mFeedDescription = savedInstanceState.getString(MainActivity.KEY_DESCRIPTION_SAVE);
+        mFeedTitle       = savedInstanceState.getString(MainActivity.KEY_TITLE_SAVE);
+        mFeedLink        = savedInstanceState.getString(MainActivity.KEY_LINK_SAVE);
+        mlistItems       = (List<FeedEntity>) savedInstanceState.getSerializable(MainActivity.KEY_LIST_SAVE);
+        mAdapter         = new FeedAdapter(getApplicationContext(),mlistItems);
+
+        mRecyclerView.setAdapter(mAdapter);
+        mDescriptionTextView.setText("Feed Description: " + MainActivity.mFeedDescription);
+        mTitleTextView.setText("Feed Title: " + MainActivity.mFeedTitle);
+        mLinkTextView.setText("Feed Link: " + MainActivity.mFeedLink);
     }
 }
