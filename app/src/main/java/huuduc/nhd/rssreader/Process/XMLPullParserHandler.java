@@ -19,6 +19,7 @@ import huuduc.nhd.rssreader.MainActivity;
 public class XMLPullParserHandler {
     private List<FeedEntity> items = new ArrayList<>();
     private boolean isItem;
+    private boolean isImage;
     private String description = "";
     private String title = "";
     private String link = "";
@@ -45,7 +46,9 @@ public class XMLPullParserHandler {
                switch (eventType){
                    case XmlPullParser.START_TAG:{
                         if(tagName.equalsIgnoreCase("item")){
-                            isItem = true;
+                            isItem  = true;
+                        }else if(tagName.equalsIgnoreCase("image"){
+                            isImage = true;
                         }
                    }
                    case XmlPullParser.TEXT:{
@@ -64,15 +67,16 @@ public class XMLPullParserHandler {
                        }
 
                        if(!title.equals("") && !link.equals("") && !description.equals("")){
-                           if(isItem){
+                           if(isItem && !isImage){
                                items.add(new FeedEntity(title,link,description));
-                           }else {
+                           }else if(!isImage){
                                MainActivity.mFeedDescription = description;
                                MainActivity.mFeedTitle       = title;
                                MainActivity.mFeedLink        = link;
                                Log.i("nguyenhuuduc",MainActivity.mFeedTitle + " " + MainActivity.mFeedDescription + " " + MainActivity.mFeedLink);
                            }
-                           isItem = false;
+                           isItem  = false;
+                           isImage = false;
                            description = "";
                            title       = "";
                            link        = "";
